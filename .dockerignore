@@ -1,0 +1,5 @@
+target/
+.mvn/repository/
+.mvn/wrapper/dists/
+.mvn/maven.config
+.git/
