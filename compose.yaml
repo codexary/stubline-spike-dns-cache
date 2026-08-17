@@ -1,0 +1,35 @@
+services:
+  authoritative:
+    image: coredns/coredns:1.14.7
+    command: -conf /etc/coredns/Corefile.authoritative
+    volumes:
+      - ./dns:/etc/coredns:ro
+    networks:
+      lab:
+        ipv4_address: 172.30.53.54
+  resolver:
+    image: coredns/coredns:1.14.7
+    command: -conf /etc/coredns/Corefile.resolver
+    volumes:
+      - ./dns/Corefile.resolver:/etc/coredns/Corefile.resolver:ro
+    depends_on:
+      - authoritative
+    networks:
+      lab:
+        ipv4_address: 172.30.53.53
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    command: sleep infinity
+    dns:
+      - 172.30.53.53
+    depends_on:
+      - resolver
+    networks:
+      lab:
+networks:
+  lab:
+    ipam:
+      config:
+        - subnet: 172.30.53.0/24

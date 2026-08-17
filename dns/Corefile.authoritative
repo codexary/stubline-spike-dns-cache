@@ -1,0 +1,7 @@
+stubline.test:53 {
+    errors
+    log
+    file /etc/coredns/zone.db stubline.test {
+        reload 1s
+    }
+}
