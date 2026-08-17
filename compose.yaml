@@ -1,19 +1,31 @@
 services:
   authoritative:
-    image: coredns/coredns:1.14.7
+    build:
+      context: .
+      dockerfile: Dockerfile.authoritative
     command: -conf /etc/coredns/Corefile.authoritative
     volumes:
       - ./dns:/etc/coredns:ro
+    healthcheck:
+      test: ["CMD", "/bin/busybox", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/health"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
     networks:
       lab:
         ipv4_address: 172.30.53.54
   resolver:
-    image: coredns/coredns:1.14.7
-    command: -conf /etc/coredns/Corefile.resolver
-    volumes:
-      - ./dns/Corefile.resolver:/etc/coredns/Corefile.resolver:ro
+    build:
+      context: .
+      dockerfile: Dockerfile.resolver
     depends_on:
-      - authoritative
+      authoritative:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "dig @127.0.0.1 service.stubline.test A +short | grep -q 192.0.2"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
     networks:
       lab:
         ipv4_address: 172.30.53.53
@@ -25,7 +37,8 @@ services:
     dns:
       - 172.30.53.53
     depends_on:
-      - resolver
+      resolver:
+        condition: service_healthy
     networks:
       lab:
 networks:

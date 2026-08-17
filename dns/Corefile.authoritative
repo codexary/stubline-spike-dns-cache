@@ -1,4 +1,5 @@
 stubline.test:53 {
+    health
     errors
     log
     file /etc/coredns/zone.db stubline.test {

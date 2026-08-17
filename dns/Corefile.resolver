@@ -1,9 +1,0 @@
-.:53 {
-    errors
-    log
-    cache 30 {
-        success 1000 30 0
-        denial 1000 10 0
-    }
-    forward . authoritative:53
-}
