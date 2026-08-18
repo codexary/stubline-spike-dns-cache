@@ -2,6 +2,9 @@
 
 # DNS 缓存小项目
 
+BuildKit 先复制 POM，再在 `/root/.m2` 缓存 Maven wrapper 和依赖；源码变更时可复用依赖解析。重复构建更快、下载更少，CI 成本也更低。
+
+
 CoreDNS 1.14.7 提供 `stubline.test` 权威 zone，health probe 使用静态的 `busybox:1.37.0-musl` 程序。基于 Debian 12.12 的 Unbound resolver 配置 stub zone，指向 CoreDNS 在实验网络中的固定地址 `172.30.53.54`；client 的 `/etc/resolv.conf` 指向 `172.30.53.53`。Unbound 对客户端提供递归查询，响应带 `ra` 而不带 `aa`。`192.0.2.0/24` 仅为文档示例地址，不作为服务连接。
 
 运行 `./mvnw -q verify`，再运行 `./scripts/dig-cache.sh`。脚本从干净 stack 启动，等待 DNS health，预热正向和 NXDOMAIN 记录，更新权威 zone，并打印缓存的真实响应。实测：resolver 的 header 为 `flags: qr rd ra`，没有 `aa`；权威 `service` 从 `192.0.2.10` 变为 `.11`；resolver 可继续返回 `.10` 且 TTL 递减，六秒记录到期后返回 `.11`。缺失名称在 SOA 指定的十秒负向缓存期内可继续返回 `NXDOMAIN`，随后返回 `NOERROR`，并打印 `missing.stubline.test ... 192.0.2.12`。实际 TTL 倒计时取决于时序。
